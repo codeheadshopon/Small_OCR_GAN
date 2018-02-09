@@ -11,6 +11,7 @@ from keras.layers.recurrent import GRU
 
 from sys import getdefaultencoding
 import sys
+import main
 
 d = getdefaultencoding()
 if d != "utf-8":
@@ -201,7 +202,7 @@ class OCR_DCGAN(object):
         self.adversarial = self.DCGAN.adversarial_model()
         self.generator = self.DCGAN.generator()
 
-    def train(self, train_steps=2000, batch_size=256, save_interval=0):
+    def train(self, train_steps=1, batch_size=256, save_interval=0):
         noise_input = None
         if save_interval>0:
             noise_input = np.random.uniform(-1.0, 1.0, size=[16, 164])
@@ -239,7 +240,7 @@ class OCR_DCGAN(object):
             print(X.shape," - ", images_fake.shape)
             x = np.concatenate((X, images_fake)) # Merge the original and fake images
             y = np.concatenate((Y,fakelabel))
-            # y = np.ones([2*batch_size, 1]) # Label The merged images together
+            # y = np.ones([2*bat2ch_size, 1]) # Label The merged images together
             # y[batch_size:, :] = 0 # Make the fake images label as 0
             d_loss = self.discriminator.train_on_batch(x, y) # Train the discriminator
 
@@ -267,7 +268,16 @@ class OCR_DCGAN(object):
         filename = 'ocr.png'
         if fake:
             if noise is None:
-                noise = np.random.uniform(-1.0, 1.0, size=[samples, 165])
+                # noise = np.random.uniform(-1.0, 1.0, size=[samples, 165])
+                basicnoise = [1, 2]
+                for i in range(3, 165):
+                    basicnoise.append(4)
+                noise = []
+                for i in range(256):
+                    noise.append(basicnoise)
+                    # fakelabel.append([1, 2, 0, 0])
+
+                noise = np.array(noise)
             else:
                 filename = "ocr_%d.png" % step
             images = self.generator.predict(noise)
@@ -276,7 +286,8 @@ class OCR_DCGAN(object):
             images = self.x_train[i, :, :, :]
 
         plt.figure(figsize=(10,10))
-        for i in range(images.shape[0]):
+        for i in range(16):
+            # print(i)
             plt.subplot(4, 4, i+1)
             image = images[i, :, :, :]
             image = np.reshape(image, [self.img_rows, self.img_cols])
